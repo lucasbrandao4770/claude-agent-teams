@@ -1,6 +1,6 @@
 {
   "ignorePatterns": [
-    { "pattern": "^https://github.com/lucasbrandao4770" }
+    { "pattern": "^https://github.com/lucasbrandao4770$" }
   ],
   "timeout": "10s",
   "retryOn429": true,
