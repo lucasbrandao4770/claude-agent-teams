@@ -34,41 +34,48 @@ token_estimate: ~800k-1.2M
 
 **This template uses a phased approach: subagent setup first, then team spawn.**
 
-### Phase 1: Setup via Foreground Subagents
+### Phase 1: Setup via Sequential Foreground Subagents
 
-Before spawning the team, the Lead delegates heavy setup work to subagents to keep its context clean. Run these in parallel:
+Before spawning the team, the Lead delegates heavy setup work to subagents to keep its context clean.
 
-#### Subagent A: "Repository Scaffolder"
+**IMPORTANT: These run SEQUENTIALLY, not in parallel.** The GitHub Configurator depends on the repo existing (created by the Scaffolder). Only use parallel subagents when tasks are truly independent.
+
+**Pre-check:** Before running any subagent, verify `gh auth status` succeeds. If not, tell the user to run `/oss setup` first and STOP.
+
+#### Subagent 1 (first): "Repository Scaffolder"
 ```
 Tasks:
-  1. gh repo create --public <name> --clone (or use existing repo)
-  2. Create project skeleton based on tech stack:
+  1. Verify: gh auth status (FAIL → tell user to run /oss setup, STOP)
+  2. Verify: gh auth setup-git (ensure git can push via gh credentials)
+  3. gh repo create --public <name> --clone (or use existing repo)
+  4. Create project skeleton based on tech stack:
      - Python: pyproject.toml, src/<pkg>/__init__.py, tests/, .gitignore
      - Node: package.json, src/index.ts, tests/, .gitignore
      - Generic: README.md placeholder, LICENSE, .gitignore
-  3. Create LICENSE file (MIT by default, ask user if different)
-  4. git add -A && git commit -m "chore: initial scaffold"
-  5. git push -u origin main
+  5. Create LICENSE file (MIT by default, ask user if different)
+  6. git add -A && git commit -m "chore: initial scaffold"
+  7. git push -u origin main
   Return: project structure summary (tree output)
 ```
 
-#### Subagent B: "GitHub Configurator"
+#### Subagent 2 (after Scaffolder completes): "GitHub Configurator"
 ```
 Tasks:
   1. Create default labels via gh:
      gh label create "ready" --color 0E8A16 --description "Ready for development"
      gh label create "in-progress" --color 1D76DB --description "Currently being worked on"
      gh label create "needs-review" --color FBCA04 --description "Needs code review"
-     gh label create "bug" --color D73A4A --description "Something isn't working"
+     gh label create "bug" --color D73A4A --description "Something isn't working" --force
      gh label create "feature" --color A2EEEF --description "New feature request"
      gh label create "docs" --color 0075CA --description "Documentation improvements"
      gh label create "chore" --color BFD4F2 --description "Maintenance tasks"
   2. Create initial milestone: gh api -X POST repos/{owner}/{repo}/milestones -f title="v0.1.0" -f description="Initial release"
-  3. Configure repo settings via gh api:
+  3. Configure repo settings via gh api (use -F for booleans):
      - Issues enabled
      - Wiki disabled
      - Discussions disabled (keep it simple)
-     - Allow squash merge (prefer), disable rebase merge
+     - Allow squash merge (prefer), disable rebase/merge commit
+     - Delete branch on merge
   Return: configuration summary
 ```
 
