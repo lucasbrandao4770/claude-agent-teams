@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/lucasbrandao4770/claude-agent-teams/compare/v1.0.0...v1.1.0) (2026-02-18)
+
+
+### Bug Fixes
+
+* improve setup verification and keep GitHub MCP enabled ([2571a42](https://github.com/lucasbrandao4770/claude-agent-teams/commit/2571a42a1712a472de6f53fbec7f0495ab3aa10f))
+
+
+### Features
+
+* add install.sh symlink installer ([72b0349](https://github.com/lucasbrandao4770/claude-agent-teams/commit/72b0349f0cb2c521ea2db96fa0f7c68d76133c80))
+
 # 1.0.0 (2026-02-18)
 
 
