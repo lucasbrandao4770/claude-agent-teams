@@ -56,13 +56,19 @@ else
     echo "=== Agent Teams Cleanup ==="
     echo ""
 
-    # Clean team dirs (skip current session's task list)
+    # Clean team dirs (skip current session's team and task list)
     current_task_list="${CLAUDE_CODE_TASK_LIST_ID:-}"
+    current_team="${CLAUDE_CODE_TEAM_NAME:-}"
 
     if [[ -d "$TEAMS_DIR" ]]; then
         for team_dir in "$TEAMS_DIR"/*/; do
             [[ -d "$team_dir" ]] || continue
             team=$(basename "$team_dir")
+            # Skip the currently active team directory
+            if [[ -n "$current_team" && "$team" == "$current_team" ]]; then
+                echo "  Skipping active team: $team"
+                continue
+            fi
             cleanup_team "$team"
         done
     fi

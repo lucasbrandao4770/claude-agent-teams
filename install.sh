@@ -12,8 +12,7 @@ echo ""
 
 # Create target directories if they don't exist
 mkdir -p "${CLAUDE_DIR}/skills"
-mkdir -p "${CLAUDE_DIR}/commands/team"
-mkdir -p "${CLAUDE_DIR}/commands/oss"
+mkdir -p "${CLAUDE_DIR}/commands"
 mkdir -p "${CLAUDE_DIR}/scripts"
 
 # Symlink skill
@@ -45,6 +44,10 @@ done
 # Symlink scripts
 if [ -L "${CLAUDE_DIR}/scripts/team-cleanup.sh" ]; then
     rm "${CLAUDE_DIR}/scripts/team-cleanup.sh"
+elif [ -f "${CLAUDE_DIR}/scripts/team-cleanup.sh" ]; then
+    echo "  WARNING: ${CLAUDE_DIR}/scripts/team-cleanup.sh is a regular file, not a symlink."
+    echo "  Back it up and remove it manually, then re-run this script."
+    exit 1
 fi
 ln -s "${SCRIPT_DIR}/scripts/team-cleanup.sh" "${CLAUDE_DIR}/scripts/team-cleanup.sh"
 echo "  Linked: scripts/team-cleanup.sh"
