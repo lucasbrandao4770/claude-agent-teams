@@ -286,7 +286,10 @@ To contribute your template to the project:
 
 1. Create a branch: `feat/template-my-template`
 2. Add your template file to `skill/references/templates/`
-3. Update the template catalog table in `skill/SKILL.md` (add a row for your template)
+3. Update the template catalog table in all locations where it appears:
+   - `skill/SKILL.md` -- the skill's decision framework (used by Claude at runtime)
+   - `commands/team/team.md` -- the `/team` command catalog shown to users
+   - `README.md` -- the public-facing template catalog in the repository root
 4. Open a PR targeting `main`
 5. CI will check your markdown for lint errors and broken links
 6. Squash merge after approval

@@ -9,8 +9,8 @@
 - [x] Coordination patterns (Leader/Specialist, Parallel Workers, Council, Watchdog)
 - [x] CI/CD pipelines (markdownlint + semantic-release)
 - [x] Documentation (README, CONTRIBUTING, getting-started, creating-templates, company-mode)
-- [ ] `install.sh` symlink installer
-- [ ] Seed issues for initial development
+- [x] `install.sh` symlink installer
+- [x] Seed issues for initial development
 
 ## v0.2.0 — Distribution
 

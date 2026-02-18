@@ -51,13 +51,6 @@ claude
 /team code-review
 ```
 
-### Validate locally
-
-```bash
-# Lint markdown files
-markdownlint '**/*.md' --ignore node_modules --ignore CHANGELOG.md
-```
-
 ## Template Catalog
 
 | Template | Pattern | Team Size | Best For |
@@ -146,6 +139,17 @@ If a teammate needs information from another's file, they read it (never write).
 - No session resume for in-process teammates (OSS templates use GitHub state instead)
 - Split panes require iTerm2 or tmux
 - iTerm2 pane cleanup may fail silently -- run `scripts/team-cleanup.sh` after sessions
+
+## Development
+
+### Validate locally
+
+```bash
+# Lint markdown files
+markdownlint '**/*.md' --ignore node_modules --ignore CHANGELOG.md
+```
+
+After running `install.sh`, all files are symlinked into `~/.claude/`, so edits in the repo are reflected immediately in any Claude Code session without reinstalling.
 
 ## Contributing
 

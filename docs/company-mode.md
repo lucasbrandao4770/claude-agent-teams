@@ -4,7 +4,7 @@ The `oss-company` template simulates a full software company with six roles work
 
 ## What It Is
 
-A team of 6 agents that mimics a real software company:
+5 specialized workers coordinated by the lead (CEO role), mimicking a real software company. The CEO is the main session (you), not a spawned teammate:
 
 | Role | Model | Responsibility |
 |------|-------|----------------|

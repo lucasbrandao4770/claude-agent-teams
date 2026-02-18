@@ -139,14 +139,31 @@ See [Company Mode Guide](company-mode.md) for details.
 
 Run `/oss help` at any time for a quick reference of all OSS commands and workflow.
 
-## Split Panes
+## Teammate Modes
 
-Agent teams work best with split panes so you can see each teammate's activity. Two backends are supported:
+Three modes control how teammate processes are launched. Set `teammateMode` in `~/.claude/settings.json`:
 
-- **iTerm2** (macOS) -- set `teammateMode: "tmux"` in `~/.claude/settings.json`, or use the CLI flag `--teammate-mode tmux`
-- **tmux** -- same setting, works on any terminal
+### `"in-process"` (Default, Recommended)
 
-Each teammate gets its own pane. The lead (your main session) stays in the original pane.
+```json
+{ "teammateMode": "in-process" }
+```
+
+Teammates run inside the same Claude Code process. No terminal panes or tmux required. This is the simplest setup and works in any environment. Teammate activity appears in the main session's output.
+
+### `"tmux"` (Split Panes)
+
+```json
+{ "teammateMode": "tmux" }
+```
+
+Each teammate gets its own terminal pane via tmux. Works in any terminal that supports tmux, including standard terminal emulators on Linux and macOS.
+
+### iTerm2 and tmux
+
+iTerm2 on macOS uses tmux under the hood for its "split pane" feature (iTerm2's native panes are tmux windows). Setting `teammateMode: "tmux"` works correctly in iTerm2 -- each teammate opens in a new iTerm2 split pane backed by a tmux session.
+
+The lead (your main session) always stays in the original pane regardless of mode.
 
 ## Cleanup
 

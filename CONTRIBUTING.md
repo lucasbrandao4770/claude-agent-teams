@@ -7,6 +7,13 @@ Thank you for your interest in contributing! This guide covers everything you ne
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated
 - [Git](https://git-scm.com/) installed
 - [Node.js](https://nodejs.org/) (for markdownlint — linting only)
+- Agent teams feature enabled via environment variable:
+
+```bash
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+```
+
+Add this to your shell profile (`~/.zshrc` or `~/.bashrc`) to persist across sessions. Without this variable set, the `/team` command and all teammate spawning will not work.
 
 ## Dev Setup
 
