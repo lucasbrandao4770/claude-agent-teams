@@ -103,12 +103,14 @@ After both QA and Reviewer approve an issue:
 
 Before spawning the team, the Lead MUST verify:
 ```
-[ ] gh auth status succeeds
-[ ] gh auth status shows 'workflow' scope (if CI files will be modified)
-[ ] gh auth setup-git has been run (git push works)
+[ ] GH_TOKEN env var is set (Classic PAT, starts with ghp_)
+[ ] gh auth status shows "(GH_TOKEN)" as auth source (NOT keyring/oauth)
+[ ] gh auth setup-git has been run (git push works without prompts)
+[ ] Token scopes include: repo, workflow, read:org
 [ ] GitHub MCP plugin is enabled (for issue/PR API operations)
 ```
-3. Shutdown workers, cleanup team
+
+If `GH_TOKEN` is not set or shows `(keyring)`, tell the user to run `/oss setup` first and STOP.
 
 ## File Ownership Guidelines
 

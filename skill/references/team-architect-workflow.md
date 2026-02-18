@@ -23,6 +23,8 @@ Detailed reference material for the `/team` command. The command file contains t
 | Ignoring repeated idle notifications | Teammate may be silently blocked (content filter, auth) | After 3+ idle cycles without output, investigate the teammate's logs or respawn |
 | Monolith commits ("add everything") | Hard to review, revert, or understand history | Commit atomically by author/purpose (CI, docs, fixes as separate commits) |
 | Disabling GitHub MCP plugin | Loses authenticated API access for issues/PRs/labels | Keep both gh CLI (git ops) AND GitHub MCP (API ops) — they complement each other |
+| Lead reads all teammate output into context | Fills context window, degrades reasoning | Have teammates send brief summaries via SendMessage; read full files only when needed |
+| Including secrets in teammate spawn prompts | Prompts are logged and visible in agent system | Use placeholder names; real tokens go in env vars or settings.json |
 
 ---
 
@@ -92,7 +94,7 @@ Detailed reference material for the `/team` command. The command file contains t
 - Lead handles cross-cutting concerns (shared patterns, naming conventions)
 
 ### OSS Projects (oss-kickstart, oss-sprint, oss-company)
-- **Prerequisites:** Run `/oss setup` first. Ensure `gh auth status` shows `workflow` scope and `gh auth setup-git` has been run.
+- **Prerequisites:** Run `/oss setup` first. Ensure `GH_TOKEN` env var is set (Classic PAT in `settings.json`), `gh auth status` shows `(GH_TOKEN)`, and `gh auth setup-git` has been run. Do NOT rely on OAuth browser flow — it requires repeated human intervention.
 - **Phased execution (kickstart):** Phase 1 uses SEQUENTIAL foreground subagents (scaffolder first, then configurator — configurator depends on repo existing). Phase 2 spawns team workers for creative work. Phase 3 is lead cleanup + atomic commits + push.
 - **Branch isolation (sprint):** Each developer works on a separate branch (`feat/<issue>-<desc>` or `fix/<issue>-<desc>`), preventing file ownership conflicts
 - **Feedback loops (sprint/company):** QA and Reviewer communicate directly with developers, not just with the lead. This creates quality multiplication.

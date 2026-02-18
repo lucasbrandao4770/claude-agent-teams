@@ -40,22 +40,22 @@ Before spawning the team, the Lead delegates heavy setup work to subagents to ke
 
 **IMPORTANT: These run SEQUENTIALLY, not in parallel.** The GitHub Configurator depends on the repo existing (created by the Scaffolder). Only use parallel subagents when tasks are truly independent.
 
-**Pre-check:** Before running any subagent, verify `gh auth status` succeeds. If not, tell the user to run `/oss setup` first and STOP.
+**Pre-check:** Before running any subagent, verify `GH_TOKEN` env var is set and `gh auth status` shows `(GH_TOKEN)`. If not, tell the user to run `/oss setup` first and STOP.
 
 #### Subagent 1 (first): "Repository Scaffolder"
 ```
 Tasks:
-  1. Verify: gh auth status (FAIL → tell user to run /oss setup, STOP)
-  2. Verify: gh auth setup-git (ensure git can push via gh credentials)
-  3. Verify: gh auth status shows 'workflow' scope (FAIL → run: gh auth refresh -h github.com -s workflow)
+  1. Verify: GH_TOKEN is set (echo $GH_TOKEN | head -c 4 should show "ghp_")
+  2. Verify: gh auth status shows "(GH_TOKEN)" as auth source (FAIL → tell user to run /oss setup, STOP)
+  3. Verify: gh auth setup-git has been run (ensure git can push via gh credentials)
   4. gh repo create --public <name> --clone (or use existing repo)
-  4. Create project skeleton based on tech stack:
+  5. Create project skeleton based on tech stack:
      - Python: pyproject.toml, src/<pkg>/__init__.py, tests/, .gitignore
      - Node: package.json, src/index.ts, tests/, .gitignore
      - Generic: README.md placeholder, LICENSE, .gitignore
-  5. Create LICENSE file (MIT by default, ask user if different)
-  6. git add -A && git commit -m "chore: initial scaffold"
-  7. git push -u origin main
+  6. Create LICENSE file (MIT by default, ask user if different)
+  7. git add -A && git commit -m "chore: initial scaffold"
+  8. git push -u origin main
   Return: project structure summary (tree output)
 ```
 
@@ -101,7 +101,7 @@ After all workers finish:
 6. Lead creates v0.1.0 milestone assignments
 7. Shutdown workers, cleanup team
 
-**IMPORTANT:** If `git push` fails with "workflow scope" error, run `gh auth refresh -h github.com -s workflow` and retry.
+**NOTE:** If `git push` fails, verify `GH_TOKEN` is set and `gh auth setup-git` has been run. With a properly scoped Classic PAT, workflow scope errors should not occur.
 
 ## File Ownership Guidelines
 
@@ -317,9 +317,9 @@ CONSTRAINTS:
 ```text
     Lead (Opus)
     |
-    |-- Phase 1: Subagents (parallel)
+    |-- Phase 1: Subagents (SEQUENTIAL — configurator depends on scaffolder)
     |   +-- Scaffolder → creates repo skeleton → returns summary
-    |   +-- Configurator → sets up GitHub → returns summary
+    |   +-- Configurator (after scaffolder) → sets up GitHub → returns summary
     |
     |-- Phase 2: Workers (parallel with cross-talk)
     |   +-- project brief --> Doc Writer
@@ -347,7 +347,6 @@ CONSTRAINTS:
 - CLAUDE.md accurately describes the project for future AI sessions
 - Labels and milestone created on GitHub
 - Seed issues created for v0.1.0 work
-- Branch protection configured on main
 - No file ownership conflicts between workers
 
 ## Common Pitfalls

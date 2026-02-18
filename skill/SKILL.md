@@ -146,6 +146,7 @@ Custom templates: See `references/templates/_meta-template.md`
 4. **Define success criteria per task** - "Tests pass" not "looks good"
 5. **Shutdown teammates when done** - Saves tokens, clean state
 6. **Check for project-specific agents first** - Prefer specialized over generic
+7. **Read GitHub state at sprint start** - `gh issue list`, `gh pr list`, `git branch -a` recover context from previous sessions
 
 ## DONTs
 
@@ -158,6 +159,7 @@ Custom templates: See `references/templates/_meta-template.md`
 7. **Nest teams** - Not supported (one team per session)
 8. **Run dependent subagents in parallel** - If task B needs task A's output, run them sequentially. Parallel subagents polling/waiting wastes tokens.
 9. **Assume idle teammates are working** - Idle may mean silently blocked (content filter, auth failure). If idle 3+ times without output, investigate or respawn.
+10. **Include secrets in teammate prompts** - use placeholder names (e.g., `${{ secrets.API_KEY }}`). Tokens go in env vars or settings.json
 
 ## Known Issues
 
@@ -177,14 +179,21 @@ Teammates may hit API-level content filtering (`Output blocked by content filter
 
 **Workaround:** Shut down the stuck teammate and either (a) write the file yourself, (b) spawn a fresh subagent with a rephrased prompt, or (c) write a simpler version of the file.
 
-### gh CLI Auth Scope Gaps
+### gh CLI Auth — Use GH_TOKEN, Not OAuth
 
-GitHub requires specific OAuth scopes for certain operations. Missing scopes cause silent or confusing failures:
-- `workflow` scope: required to push `.github/workflows/` files
-- `admin:repo_hook` scope: required for branch protection rules
-- `gh auth setup-git` must be run for `git push` to work (even if `gh` itself is authenticated)
+The `gh` CLI's default OAuth browser flow (`gh auth login`) creates tokens (`gho_` prefix) that expire and require interactive re-authentication — completely incompatible with long-running agent team sessions.
 
-**Workaround:** Run `gh auth refresh -h github.com -s workflow` to add missing scopes. Always run `gh auth setup-git` after authenticating.
+**Solution:** Use a **Classic PAT** (`ghp_` prefix) set as `GH_TOKEN` in `~/.claude/settings.json`. This:
+- Never expires (or has long expiry you control)
+- Never prompts for browser auth
+- Is inherited by ALL Claude Code processes including teammates
+- Takes absolute precedence over keyring-stored OAuth tokens
+
+**Setup:** Run `/oss setup` which guides through creating a Classic PAT with scopes (`repo`, `workflow`, `read:org`, `delete_repo`, `gist`) and adding it to settings.json.
+
+**Verification:** `gh auth status` should show `(GH_TOKEN)` — if it shows `(keyring)` or `(oauth)`, the env var is not loaded. Restart the Claude Code session.
+
+**Still required:** `gh auth setup-git` must be run once to configure git's credential helper to use `gh` (which reads `GH_TOKEN`).
 
 ## Limitations
 
@@ -216,4 +225,4 @@ Detailed cost modeling and optimization: see `references/token-economics.md`
 - Team templates: `references/templates/`
 - Meta-template for custom templates: `references/templates/_meta-template.md`
 - Command: `~/.claude/commands/team/team.md`
-- Official docs: https://code.claude.com/docs/en/agent-teams
+- Official repo: https://github.com/lucasbrandao4770/claude-agent-teams

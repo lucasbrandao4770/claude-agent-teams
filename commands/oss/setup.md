@@ -1,6 +1,6 @@
 # OSS Setup Command
 
-> **One-time setup.** Guides the user through installing and authenticating the GitHub CLI (`gh`) for use with OSS Factory templates.
+> **One-time setup.** Configures GitHub CLI authentication for non-interactive use with OSS Factory templates and agent teams.
 
 ## Execute These Steps
 
@@ -19,95 +19,100 @@ brew install gh
 
 Verify with `gh --version`. If `brew` is also missing, guide the user to https://cli.github.com/ for manual install.
 
-### Step 2: Check Authentication
+### Step 2: Create a Classic PAT
 
-```bash
-gh auth status
-```
-
-- **If authenticated:** Report the username and scopes. Continue to Step 3.
-- **If not authenticated:** Guide the user through authentication.
+Guide the user to create a **Classic** Personal Access Token (NOT fine-grained — Classic PATs work best with `gh` CLI and have simpler scope management).
 
 Tell the user:
 
 ```
-To authenticate, you need a GitHub Personal Access Token (fine-grained).
+To authenticate non-interactively, you need a Classic Personal Access Token.
 
-1. Go to: https://github.com/settings/tokens?type=beta
-2. Click "Generate new token"
-3. Name it: "Claude Code OSS Factory"
-4. Set expiration (90 days recommended)
-5. Under "Repository access" → "All repositories" (or select specific repos)
-6. Under "Permissions" enable:
-   - Administration: Read and Write (REQUIRED for repo creation)
-   - Contents: Read and Write
-   - Issues: Read and Write
-   - Pull requests: Read and Write
-   - Actions: Read-only
-   - Metadata: Read-only
-7. Click "Generate token" and copy it
+1. Go to: https://github.com/settings/tokens (Classic tokens tab)
+2. Click "Generate new token (classic)"
+3. Configure:
+   - Note: "Claude Code Agent Teams"
+   - Expiration: No expiration (or 1 year)
+   - Scopes (check these boxes):
+     ✓ repo           (full control of repositories)
+     ✓ workflow        (update GitHub Action workflows)
+     ✓ read:org        (read org membership)
+     ✓ delete_repo     (delete repositories)
+     ✓ gist            (create gists)
+4. Click "Generate token" and copy it (starts with ghp_)
 ```
 
-Then ask the user to paste their token. Once they provide it:
+Then ask the user to paste their token.
 
-```bash
-echo "<token>" | gh auth login --with-token
+### Step 3: Add GH_TOKEN to Claude Code Settings
+
+This is the CRITICAL step. The `GH_TOKEN` environment variable makes ALL `gh` CLI commands and `git push/pull` work without any interactive prompts — no browser auth, no device flow, ever.
+
+Add the token to `~/.claude/settings.json` in the `env` section:
+
+```json
+{
+  "env": {
+    "GH_TOKEN": "ghp_<the-token-the-user-pasted>"
+  }
+}
 ```
 
-Verify with `gh auth status`.
+Use the Edit tool to add the key to the existing `env` object. Do NOT overwrite other env vars.
 
-### Step 3: Configure Git Credential Helper
+**Why `GH_TOKEN` in settings.json:**
+- Inherited by ALL Claude Code processes including teammates
+- Takes absolute precedence over keyring-stored OAuth tokens
+- Persists across sessions without any re-authentication
+- No browser popups, no device flow, no token refresh needed
 
-This is CRITICAL — without this, `git push` will fail even though `gh` is authenticated:
+### Step 4: Configure Git Credential Helper
 
 ```bash
 gh auth setup-git
 ```
 
-This configures git to use `gh` as the credential helper for github.com.
+This configures git to use `gh` as the credential helper for github.com. Combined with `GH_TOKEN`, this means `git push` and `git pull` authenticate silently via the PAT.
 
-### Step 4: Verify Access (Comprehensive)
+### Step 5: Verify Access
 
-Run ALL of these checks. Do NOT declare success until every check passes:
+Run these checks to confirm everything works:
 
 ```bash
-# Check 1: Can list repos (basic auth)
+# Check 1: gh CLI uses GH_TOKEN (should show "Logged in... (GH_TOKEN)")
+gh auth status
+
+# Check 2: Can list repos (basic API access)
 gh repo list --limit 3
 
-# Check 2: Can create repos (Administration permission)
-# Create a temporary test repo, then delete it
-gh repo create test-oss-setup-check --public --description "Temporary setup check" --clone 2>/dev/null
-# If this fails, the token is missing "Administration" permission — tell the user to update their PAT
+# Check 3: Can list issues on a repo
+gh issue list --repo <any-user-repo> --limit 1
 
-# Check 3: Can create labels (Issues permission)
-gh label create "test-label" --repo <test-repo> --color 0E8A16 --description "Test" 2>/dev/null
-
-# Check 4: Can push via git (git credential helper)
-cd <test-repo> && echo "test" > test.txt && git add test.txt && git commit -m "test" && git push
-
-# Cleanup: delete the test repo
-gh repo delete <test-repo> --yes
+# Check 4: Token has correct scopes
+# gh auth status should show: 'delete_repo', 'gist', 'read:org', 'repo', 'workflow'
 ```
 
-**If any check fails**, tell the user EXACTLY which permission is missing and how to fix it. Common issues:
+**Key verification:** `gh auth status` must show `(GH_TOKEN)` as the auth source — NOT `(keyring)` or `(oauth)`. If it shows `(keyring)`, the `GH_TOKEN` env var is not being picked up. Check that it was added correctly to `settings.json` and that the Claude Code session was restarted.
 
-| Check Failed | Missing Permission | Fix |
+**If any check fails:**
+
+| Symptom | Cause | Fix |
 |---|---|---|
-| `gh repo list` fails | Token invalid or expired | Re-create token |
-| `gh repo create` fails | Administration: Read and Write | Update PAT permissions |
-| `gh label create` fails | Issues: Read and Write | Update PAT permissions |
-| `git push` fails | `gh auth setup-git` not run | Run Step 3 again |
-| `git push` fails on workflow files | Missing `workflow` scope | `gh auth refresh -h github.com -s workflow` |
+| `gh auth status` shows `(keyring)` not `(GH_TOKEN)` | Env var not loaded | Restart Claude Code session after editing settings.json |
+| Missing `workflow` scope | Token created without workflow | Regenerate token with `workflow` scope checked |
+| Missing `delete_repo` scope | Token created without delete_repo | Regenerate token with `delete_repo` scope checked |
+| `git push` prompts for password | `gh auth setup-git` not run | Run Step 4 again |
 
-**Only after ALL checks pass**, report:
+**Only after all checks pass**, report:
 
 ```
 OSS Setup Complete
 ==================
   GitHub CLI:    gh vX.Y.Z
-  Authenticated: @username
+  Authenticated: @username (via GH_TOKEN)
+  Auth source:   Classic PAT in settings.json (non-interactive)
   Git credential: configured (gh auth setup-git)
-  Verified:      repo create ✓  labels ✓  push ✓
+  Scopes:        repo, workflow, read:org, delete_repo, gist
 
 You're ready to use:
   /team oss-kickstart    Create a new open-source project
@@ -117,11 +122,11 @@ You're ready to use:
 Run /oss help for the full navigation guide.
 ```
 
-### Step 5: Verify GitHub MCP Plugin is Enabled
+### Step 6: Verify GitHub MCP Plugin is Enabled
 
 The GitHub MCP plugin and `gh` CLI complement each other:
-- **GitHub MCP**: API operations (create repos, issues, PRs, labels) — already authenticated via plugin
-- **gh CLI**: git operations (push, pull, branch management) — authenticated via OAuth/PAT
+- **GitHub MCP**: API operations (create repos, issues, PRs, labels) — authenticated via plugin
+- **gh CLI + GH_TOKEN**: git operations (push, pull, branch management) + label/milestone management
 
 Check that `"github@claude-plugins-official": true` is set in `~/.claude/settings.json`. If not, enable it.
 
@@ -132,8 +137,14 @@ Do NOT suggest disabling either tool — they serve different purposes and both 
 ## Error Handling
 
 - If `brew install gh` fails → suggest `curl` install from https://cli.github.com/
-- If token auth fails → check token hasn't expired, permissions are correct
-- If `gh repo create` fails → token needs "Administration: Read and Write" permission
+- If the user creates a fine-grained PAT instead of Classic → it may work but Classic is recommended for simpler scope management
+- If `gh auth status` shows `(keyring)` instead of `(GH_TOKEN)` → the env var is not loaded; restart Claude Code
 - If `git push` fails → run `gh auth setup-git` to configure git credential helper
-- If `gh repo list` fails → token may lack the right scopes, guide re-creation
 - If user is behind a proxy → suggest `gh config set http_proxy <url>`
+
+## Security Notes
+
+- The PAT is stored in `~/.claude/settings.json` which is a local config file (not in any git repo)
+- Classic PATs with no expiration are convenient but should be rotated periodically
+- If the token is compromised, revoke it at https://github.com/settings/tokens and create a new one
+- Never commit the token to any repository
