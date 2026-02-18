@@ -1,6 +1,7 @@
 ---
 name: Template Request
 about: Suggest a new team template
+title: "[Template] "
 labels: template, feature
 ---
 

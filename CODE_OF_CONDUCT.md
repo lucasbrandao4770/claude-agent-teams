@@ -35,7 +35,8 @@ an individual is officially representing the community in public spaces.
 
 ## Enforcement
 
-Instances of unacceptable behavior may be reported to the project maintainers.
+Instances of unacceptable behavior may be reported to the project maintainer
+via GitHub: [@lucasbrandao4770](https://github.com/lucasbrandao4770).
 All complaints will be reviewed and investigated promptly and fairly.
 
 ## Attribution
