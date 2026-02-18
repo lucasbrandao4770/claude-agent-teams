@@ -1,0 +1,174 @@
+# claude-agent-teams
+
+Multi-agent team framework for Claude Code. Turn Claude into a coordinated software engineering team with pre-built templates, coordination patterns, and best practices.
+
+**Owner:** lucasbrandao4770
+**License:** MIT
+**Tech stack:** Markdown, Shell, YAML (GitHub Actions)
+
+## Architecture
+
+The framework has four components:
+
+1. **Skill** (`skill/SKILL.md`) -- The main entry point. Activates when users mention "agent team", "swarm", "multi-agent", or run `/team`. Contains the decision framework, coordination patterns summary, file ownership rules, template catalog, DOs/DONTs, and known issues.
+
+2. **Commands** (`commands/`) -- Slash commands that users invoke directly:
+   - `/team` (`commands/team/team.md`) -- Spawn and manage agent teams. Parses flags (`--dry`, `--max-mode`), loads templates, discovers project agents, builds file ownership maps, and orchestrates the full team lifecycle.
+   - `/oss setup` (`commands/oss/setup.md`) -- One-time GitHub CLI setup and authentication for OSS templates.
+   - `/oss help` (`commands/oss/help.md`) -- Shows the OSS Factory navigation guide.
+
+3. **Templates** (`skill/references/templates/`) -- Pre-built team configurations. Each template defines roles, file ownership, task decomposition, teammate prompts, communication flow, and adaptation notes. There are 8 templates plus a `_meta-template.md` for creating custom ones.
+
+4. **Scripts** (`scripts/`) -- Shell utilities:
+   - `team-cleanup.sh` -- Cleans up orphaned iTerm2 panes and stale team/task directories after a team session.
+
+## File Structure
+
+```text
+claude-agent-teams/
+├── .claude/CLAUDE.md                 # THIS FILE - project conventions for AI sessions
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml                    # CI: markdownlint + link check on PRs
+│   │   └── release.yml               # CD: semantic-release on merge to main
+│   ├── mlc_config.json               # Markdown link checker config
+│   └── ISSUE_TEMPLATE/               # GitHub issue templates
+├── .markdownlint.json                # Markdownlint config (disabled rules: MD013, MD033, MD041)
+├── .releaserc.json                   # semantic-release config
+├── skill/
+│   ├── SKILL.md                      # Main skill definition (entry point)
+│   └── references/
+│       ├── coordination-patterns.md  # 5 coordination patterns deep dive
+│       ├── token-economics.md        # Cost modeling and optimization
+│       ├── team-architect-workflow.md # Anti-patterns, checklists, adaptation notes
+│       └── templates/                # 8 team templates + meta-template
+│           ├── _meta-template.md     # Format guide for creating new templates
+│           ├── code-review.md        # Council: multi-lens code review
+│           ├── debug-investigate.md  # Leader/Specialist: unknown root cause
+│           ├── refactor.md           # Parallel Workers: cross-module refactor
+│           ├── fullstack-feature.md  # Leader/Specialist: UI + API + tests
+│           ├── research-review.md    # Parallel Workers: literature review
+│           ├── oss-kickstart.md      # Leader/Specialist: new OSS project
+│           ├── oss-sprint.md         # Leader/Specialist: issue sprint
+│           └── oss-company.md        # Leader/Specialist: full company sim
+├── commands/
+│   ├── team/team.md                  # /team command definition
+│   └── oss/
+│       ├── setup.md                  # /oss setup command
+│       └── help.md                   # /oss help command
+├── scripts/
+│   └── team-cleanup.sh               # Cleanup utility for orphaned panes
+├── install.sh                        # Symlink installer (links to ~/.claude/)
+├── docs/
+│   ├── getting-started.md            # Installation and first-use guide
+│   ├── creating-templates.md         # Guide for authoring custom templates
+│   └── company-mode.md              # Guide for the oss-company template
+├── LICENSE                           # MIT
+└── .gitignore
+```
+
+## Markdown Standards
+
+All files in this project are Markdown. Follow these conventions:
+
+- **Headings:** Use ATX style (`#`, `##`, `###`). Never use setext style (`===`, `---` underlines).
+- **Code blocks:** Always use fenced blocks with language tags (e.g., ` ```yaml `, ` ```bash `, ` ```text `).
+- **Tables:** Must have header separator rows. Align columns for readability.
+- **Links:** Use relative paths within the repo (e.g., `skill/references/templates/code-review.md`). Never use absolute filesystem paths.
+- **Line length:** No hard limit (MD013 is disabled), but keep lines readable.
+- **HTML:** Allowed when necessary (MD033 is disabled), but prefer Markdown equivalents.
+- **First line:** Does not need to be a top-level heading (MD041 is disabled).
+- **Duplicate headings:** Allowed within sibling sections (MD024 siblings_only).
+
+## Template Authoring Standards
+
+When creating or modifying templates in `skill/references/templates/`:
+
+- Follow the format defined in `_meta-template.md`.
+- **Frontmatter is required** with these fields:
+  - `name` -- kebab-case identifier
+  - `description` -- one-line description
+  - `pattern` -- coordination pattern (leader-specialist, parallel-workers, sequential-pipeline, council, watchdog)
+  - `team_size` -- number (2-5)
+  - `best_for` -- brief scenario description
+  - `token_estimate` -- approximate token cost
+- **Required sections** (in order): When to Use, When NOT to Use, Team Composition, File Ownership Guidelines, Task Decomposition, Teammate Prompt Template, Communication Flow, Success Criteria, Common Pitfalls, Adaptation Notes.
+- File ownership must have ZERO overlaps between teammates.
+- Teammate prompts must include: role, owned files, read-only files, tasks, communication instructions, constraints.
+
+## Git Workflow
+
+### Branch Naming
+
+```text
+feat/<description>     # New feature or template
+fix/<description>      # Bug fix
+docs/<description>     # Documentation changes
+chore/<description>    # Maintenance, CI, tooling
+```
+
+### Commit Format
+
+Use [conventional commits](https://www.conventionalcommits.org/):
+
+```text
+<type>: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`
+
+- `feat:` triggers a **minor** version bump
+- `fix:` triggers a **patch** version bump
+- `BREAKING CHANGE` in the footer triggers a **major** version bump
+
+### PR Process
+
+1. Branch from `main`
+2. Implement changes following the standards above
+3. Open a PR targeting `main`
+4. CI must pass (markdownlint + link check)
+5. Squash merge into `main`
+6. Semantic-release auto-creates a GitHub Release on merge
+
+## CI/CD
+
+### CI Pipeline (`.github/workflows/ci.yml`)
+
+Runs on every PR to `main`:
+1. **Markdown lint** -- `markdownlint '**/*.md'` with rules from `.markdownlint.json`
+2. **Link check** -- Validates all markdown links using `markdown-link-check` with config from `.github/mlc_config.json`
+
+### CD Pipeline (`.github/workflows/release.yml`)
+
+Runs on push to `main` (merged PRs) and manual dispatch:
+1. Analyzes commits since last release using conventional commit format
+2. Bumps version, generates CHANGELOG.md
+3. Creates a GitHub Release with auto-generated notes
+4. Commits the CHANGELOG back to `main`
+
+Config: `.releaserc.json`
+
+## Key Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/team` | List available team templates |
+| `/team <template>` | Spawn a team using the specified template |
+| `/team <template> --dry` | Preview team plan without spawning |
+| `/team <template> --max-mode` | Spawn with all workers using Opus |
+| `/team create` | Create a new custom template (guided) |
+| `/oss setup` | Configure GitHub CLI for OSS templates |
+| `/oss help` | Show OSS Factory navigation guide |
+
+## Important Rules
+
+- **File ownership is critical.** Never let two teammates write the same file.
+- **The main agent IS the team lead.** Never spawn a separate lead teammate.
+- **Never more than 5 teammates.** Coordination overhead exceeds gains beyond this.
+- **Use Opus for lead, Sonnet for workers** by default. Use `--max-mode` for all-Opus.
+- **Releases are handled by CI/CD, never by LLMs.** The CD pipeline uses semantic-release.
+- **Templates auto-adapt** to project context by discovering agents in `.claude/agents/`.
