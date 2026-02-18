@@ -156,6 +156,8 @@ Custom templates: See `references/templates/_meta-template.md`
 5. **Forget to clean up** - Always TeamDelete when finished
 6. **Expect session resumption** - Teams are single-session, experimental (OSS templates use GitHub state for continuity instead)
 7. **Nest teams** - Not supported (one team per session)
+8. **Run dependent subagents in parallel** - If task B needs task A's output, run them sequentially. Parallel subagents polling/waiting wastes tokens.
+9. **Assume idle teammates are working** - Idle may mean silently blocked (content filter, auth failure). If idle 3+ times without output, investigate or respawn.
 
 ## Known Issues
 
@@ -164,6 +166,25 @@ Custom templates: See `references/templates/_meta-template.md`
 When using `teammateMode: "tmux"` with iTerm2, teammate panes may survive after shutdown/TeamDelete. The internal `it2 session close` call lacks the `-f` flag, causing silent failure in non-interactive context.
 
 **Workaround:** Close orphaned panes manually with Cmd+W, or run `~/.claude/scripts/team-cleanup.sh` after each team session.
+
+### Content Filtering Blocking Teammate Writes
+
+Teammates may hit API-level content filtering (`Output blocked by content filtering policy`) when writing certain files. This is **not** a permissions or code issue — it's the safety filter blocking output generation. The teammate appears to be working (stays in_progress, rejects shutdown) but keeps going idle without producing files.
+
+**Symptoms:** Teammate goes idle repeatedly without creating files. Task stays in_progress. Shutdown requests get rejected with "I'm still working."
+
+**Affected content:** Code of conduct files, security-related templates, any text discussing sensitive topics.
+
+**Workaround:** Shut down the stuck teammate and either (a) write the file yourself, (b) spawn a fresh subagent with a rephrased prompt, or (c) write a simpler version of the file.
+
+### gh CLI Auth Scope Gaps
+
+GitHub requires specific OAuth scopes for certain operations. Missing scopes cause silent or confusing failures:
+- `workflow` scope: required to push `.github/workflows/` files
+- `admin:repo_hook` scope: required for branch protection rules
+- `gh auth setup-git` must be run for `git push` to work (even if `gh` itself is authenticated)
+
+**Workaround:** Run `gh auth refresh -h github.com -s workflow` to add missing scopes. Always run `gh auth setup-git` after authenticating.
 
 ## Limitations
 

@@ -19,6 +19,10 @@ Detailed reference material for the `/team` command. The command file contains t
 | Use LLMs to cut releases | Unreliable, risky, unnecessary | Set up CD via GitHub Actions (semantic-release) |
 | Skip feedback loops in sprint | Developers ship untested/unreviewed code | QA + Reviewer communicate directly with devs |
 | Static team for phased work | Wastes tokens on idle workers | Dynamic spawn/shutdown: subagents for setup, team for creative work |
+| Parallel subagents with dependencies | Task B polls/waits for Task A, wasting tokens | Run dependent subagents sequentially; only parallelize truly independent work |
+| Ignoring repeated idle notifications | Teammate may be silently blocked (content filter, auth) | After 3+ idle cycles without output, investigate the teammate's logs or respawn |
+| Monolith commits ("add everything") | Hard to review, revert, or understand history | Commit atomically by author/purpose (CI, docs, fixes as separate commits) |
+| Disabling GitHub MCP plugin | Loses authenticated API access for issues/PRs/labels | Keep both gh CLI (git ops) AND GitHub MCP (API ops) — they complement each other |
 
 ---
 
@@ -88,8 +92,8 @@ Detailed reference material for the `/team` command. The command file contains t
 - Lead handles cross-cutting concerns (shared patterns, naming conventions)
 
 ### OSS Projects (oss-kickstart, oss-sprint, oss-company)
-- **Prerequisites:** Run `/oss setup` first for `gh` CLI authentication
-- **Phased execution (kickstart):** Phase 1 uses foreground subagents for repo scaffold + GitHub config. Phase 2 spawns team workers for creative work. Phase 3 is lead cleanup + push.
+- **Prerequisites:** Run `/oss setup` first. Ensure `gh auth status` shows `workflow` scope and `gh auth setup-git` has been run.
+- **Phased execution (kickstart):** Phase 1 uses SEQUENTIAL foreground subagents (scaffolder first, then configurator — configurator depends on repo existing). Phase 2 spawns team workers for creative work. Phase 3 is lead cleanup + atomic commits + push.
 - **Branch isolation (sprint):** Each developer works on a separate branch (`feat/<issue>-<desc>` or `fix/<issue>-<desc>`), preventing file ownership conflicts
 - **Feedback loops (sprint/company):** QA and Reviewer communicate directly with developers, not just with the lead. This creates quality multiplication.
 - **Session continuity:** GitHub IS the persistence layer. Lead reads `gh issue list`, `gh pr list`, `git branch -a` at session start to recover context.

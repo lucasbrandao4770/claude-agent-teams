@@ -47,7 +47,8 @@ Before spawning the team, the Lead delegates heavy setup work to subagents to ke
 Tasks:
   1. Verify: gh auth status (FAIL → tell user to run /oss setup, STOP)
   2. Verify: gh auth setup-git (ensure git can push via gh credentials)
-  3. gh repo create --public <name> --clone (or use existing repo)
+  3. Verify: gh auth status shows 'workflow' scope (FAIL → run: gh auth refresh -h github.com -s workflow)
+  4. gh repo create --public <name> --clone (or use existing repo)
   4. Create project skeleton based on tech stack:
      - Python: pyproject.toml, src/<pkg>/__init__.py, tests/, .gitignore
      - Node: package.json, src/index.ts, tests/, .gitignore
@@ -90,11 +91,17 @@ After Phase 1 completes, the Lead spawns 3 workers for parallel creative work.
 After all workers finish:
 1. Lead reviews all output for consistency
 2. Lead fixes cross-references (e.g., test commands in README match CI config)
-3. Lead commits all files: `git add -A && git commit -m "chore: add docs, CI/CD, and project conventions"`
+3. Lead commits in ATOMIC commits grouped by author/purpose — NOT one monolith:
+   - `feat: add CI/CD pipelines` (ci-cd-engineer's files)
+   - `docs: add project conventions and guides` (conventions-writer's files)
+   - `docs: add README and CONTRIBUTING` (doc-writer's files)
+   - `docs: add code of conduct, issue templates, roadmap` (remaining docs)
 4. Lead pushes to main
 5. Lead creates seed issues for initial development work
 6. Lead creates v0.1.0 milestone assignments
 7. Shutdown workers, cleanup team
+
+**IMPORTANT:** If `git push` fails with "workflow scope" error, run `gh auth refresh -h github.com -s workflow` and retry.
 
 ## File Ownership Guidelines
 

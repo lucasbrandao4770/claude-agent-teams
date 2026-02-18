@@ -99,6 +99,17 @@ After both QA and Reviewer approve an issue:
 2. Comment on unfinished issues with what was accomplished
 3. Shutdown workers, cleanup team
 
+### PRE-SPRINT CHECKLIST
+
+Before spawning the team, the Lead MUST verify:
+```
+[ ] gh auth status succeeds
+[ ] gh auth status shows 'workflow' scope (if CI files will be modified)
+[ ] gh auth setup-git has been run (git push works)
+[ ] GitHub MCP plugin is enabled (for issue/PR API operations)
+```
+3. Shutdown workers, cleanup team
+
 ## File Ownership Guidelines
 
 | Teammate | Owns (writes) | Reads (reference only) |
