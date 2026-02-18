@@ -133,3 +133,5 @@ token_estimate: ~400k
 - Tests pass against the implementation
 - No file ownership conflicts
 ```
+
+**Note:** This is a minimal example. Production templates should include ALL required sections listed above, including Teammate Prompt Template, Communication Flow, and Adaptation Notes.

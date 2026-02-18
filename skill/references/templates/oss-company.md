@@ -36,6 +36,10 @@ token_estimate: ~2-3M
 
 **Note:** CTO and Code Reviewer are Opus for maximum quality on architectural and review decisions. Use `--max-mode` to make ALL roles Opus.
 
+**Model assignment by mode:** In default mode: CEO + CTO + Reviewer = Opus, PM + Developer + QA = Sonnet. With `--max-mode`: all roles use Opus (PM, Developer, and QA are upgraded).
+
+**team_size note:** `team_size: 5` counts spawned workers only (CTO, PM, Developer, QA, Code Reviewer); the CEO (lead/main agent) is not counted.
+
 ## Company Communication Protocol
 
 ### Sprint Planning Phase
