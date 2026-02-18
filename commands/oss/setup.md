@@ -97,6 +97,7 @@ gh repo delete <test-repo> --yes
 | `gh repo create` fails | Administration: Read and Write | Update PAT permissions |
 | `gh label create` fails | Issues: Read and Write | Update PAT permissions |
 | `git push` fails | `gh auth setup-git` not run | Run Step 3 again |
+| `git push` fails on workflow files | Missing `workflow` scope | `gh auth refresh -h github.com -s workflow` |
 
 **Only after ALL checks pass**, report:
 
@@ -116,16 +117,15 @@ You're ready to use:
 Run /oss help for the full navigation guide.
 ```
 
-### Step 5: Optional — Disable GitHub MCP Plugin
+### Step 5: Verify GitHub MCP Plugin is Enabled
 
-Ask the user (via AskUserQuestion):
+The GitHub MCP plugin and `gh` CLI complement each other:
+- **GitHub MCP**: API operations (create repos, issues, PRs, labels) — already authenticated via plugin
+- **gh CLI**: git operations (push, pull, branch management) — authenticated via OAuth/PAT
 
-> Since `gh` CLI handles all GitHub operations, the GitHub MCP plugin is redundant. Want to disable it?
->
-> - **Yes, disable it** — reduces noise, recommended
-> - **No, keep it** — I use it for other things
+Check that `"github@claude-plugins-official": true` is set in `~/.claude/settings.json`. If not, enable it.
 
-If yes, guide them to remove `"github@claude-plugins-official": true` from `~/.claude/settings.json`.
+Do NOT suggest disabling either tool — they serve different purposes and both are needed.
 
 ---
 
